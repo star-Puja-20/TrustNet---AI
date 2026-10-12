@@ -39,6 +39,14 @@ npm run dev
 ```
 Open http://localhost:5173. To use another API address, set `VITE_API_URL`.
 
+## Deploy the frontend to Vercel
+
+This repository's Vercel deployment serves the Vite frontend. In Vercel, import the repository and set **Root Directory** to `frontend`; Vercel detects Vite and builds the static app into `dist`. `frontend/vercel.json` configures SPA route fallback.
+
+The FastAPI service must remain available at a separately hosted backend URL. In the Vercel project's Environment Variables, set `VITE_API_URL` to that backend's origin (for example, `https://api.example.com`, with no `/api` suffix), then redeploy. On the backend host, set `CORS_ALLOW_ORIGINS` to the exact deployed frontend origin(s), such as the production Vercel domain. Keep the API key and other secrets on the backend; Vite `VITE_*` values are public in the built frontend.
+
+The backend currently stores audit history and policies in SQLite. Do not run it as a Vercel serverless function with the current database setup: function instances do not provide a shared, durable SQLite file, so history and adaptive guardrail state would be inconsistent. A Vercel-hosted API needs a persistent shared database before migration.
+
 ## Quick Demo Scenarios and System Status
 - **Quick Demo Scenarios** (top of the Simulator page): Safe Email, Unauthorized Delete User, Invalid Email,
   Duplicate Payment, Invalid Payment Amount, Invalid File Path. A click fills the manual simulator
@@ -47,6 +55,10 @@ Open http://localhost:5173. To use another API address, set `VITE_API_URL`.
   and validation readiness, from the backend `GET /health` endpoint (refreshes every 10 s).
 - **Dashboard**: colored cards (blue total, green allowed, red blocked, yellow warnings), average reliability score,
   risk-type pie chart and request history; refreshes every 5 s.
+
+## Unified Trust Gate
+
+The **Unified Trust Gate** links an incoming email assessment with a proposed AI agent tool call. It runs the existing email analyzer and guardrail together, then uses the more restrictive result as the combined verdict (Block over Warn over Allow). This lets a suspicious email raise the gate even when the proposed action independently passes policy. It is a simulation and does not execute the proposed tool action.
 
 ## Live URL Threat Checks
 

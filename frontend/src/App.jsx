@@ -5,8 +5,9 @@ import SystemStatus from "./components/SystemStatus";
 
 const Dashboard = lazy(() => import("./pages/Dashboard"));
 const EmailTrust = lazy(() => import("./pages/EmailTrust"));
+const TrustGate = lazy(() => import("./pages/TrustGate"));
 
-const PAGES = { Home, Simulator, Dashboard, "Email Trust": EmailTrust };
+const PAGES = { Home, Simulator, Dashboard, "Email Trust": EmailTrust, "Unified Trust Gate": TrustGate };
 
 export default function App() {
   const [page, setPage] = useState("Home");
@@ -16,7 +17,7 @@ export default function App() {
       <header className="bg-stone-900 text-stone-100">
         <div className="mx-auto flex max-w-5xl flex-wrap items-center gap-x-6 gap-y-3 px-4 py-3">
           <span className="font-semibold">TrustNet-AI</span>
-          <nav className="flex gap-6">
+          <nav className="flex flex-wrap gap-x-4 gap-y-2">
             {Object.keys(PAGES).map((p) => (
               <button key={p} onClick={() => setPage(p)}
                 className={`text-sm ${page === p ? "text-white underline underline-offset-8" : "text-stone-400 hover:text-white"}`}>

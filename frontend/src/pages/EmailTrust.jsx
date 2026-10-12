@@ -6,7 +6,41 @@ const card = "rounded-xl border border-stone-200 bg-white p-5 shadow-sm dark:bor
 const input = "mt-1 w-full rounded-lg border border-stone-300 bg-white px-3 py-2 text-sm text-stone-900 outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-100 dark:border-stone-600 dark:bg-stone-800 dark:text-stone-100";
 
 function Result({ result }) {
+  const [briefStatus, setBriefStatus] = useState("");
   if (!result) return null;
+
+  function trustBrief() {
+    const signals = result.findings?.length ? result.findings.join(", ") : "No configured phishing indicators detected";
+    return [
+      "TrustNet-AI | Shareable Trust Brief",
+      `Created: ${new Date().toLocaleString()}`,
+      `Assessment: ${result.scan_type || "Email assessment"}`,
+      `Decision: ${result.decision} | Trust score: ${result.trust_score}/100 | Risk: ${result.risk}`,
+      `Signals: ${signals}`,
+      `Recommended action: ${result.recommendation}`,
+      "Scope: Technical signals only. This brief excludes the sender address, message text, and extracted URLs. It does not verify mailbox ownership or identify a person.",
+    ].join("\n");
+  }
+
+  async function copyBrief() {
+    try {
+      await navigator.clipboard.writeText(trustBrief());
+      setBriefStatus("Brief copied. Message content and URLs were left out.");
+    } catch {
+      setBriefStatus("Copy is unavailable in this browser. Use Download brief instead.");
+    }
+  }
+
+  function downloadBrief() {
+    const url = URL.createObjectURL(new Blob([trustBrief()], { type: "text/plain;charset=utf-8" }));
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "trustnet-trust-brief.txt";
+    link.click();
+    URL.revokeObjectURL(url);
+    setBriefStatus("Brief downloaded. Message content and URLs were left out.");
+  }
+
   return <section className={`${card} mt-5`}>
     <div className="flex flex-wrap items-center justify-between gap-3"><h3 className="text-lg font-semibold">Trust assessment</h3><DecisionBadge decision={result.decision} /></div>
     <div className="mt-4 grid grid-cols-2 gap-3 sm:grid-cols-4">
@@ -26,6 +60,13 @@ function Result({ result }) {
     {result.findings && <div className="mt-4 text-sm"><b>Signals:</b> {result.findings.join(", ") || "None detected"}<br/><b>URLs:</b> {result.urls.length ? result.urls.join(", ") : "None found"}<br/><b>Domains:</b> {result.domains.length ? result.domains.join(", ") : "None found"}</div>}
     <div className="mt-4"><b className="text-sm">Reasons</b><ul className="mt-1 list-inside list-disc text-sm text-stone-600 dark:text-stone-300">{result.reasons.map((reason, i) => <li key={i}>{reason}</li>)}</ul></div>
     <p className="mt-3 rounded-lg bg-indigo-50 p-3 text-sm text-indigo-950 dark:bg-indigo-950 dark:text-indigo-100"><b>Recommendation:</b> {result.recommendation}</p>
+    <div className="mt-4 rounded-lg border border-indigo-200 bg-indigo-50/50 p-4 dark:border-indigo-900 dark:bg-indigo-950/30">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div><h4 className="font-semibold">Shareable Trust Brief</h4><p className="mt-1 text-xs text-stone-600 dark:text-stone-300">A compact assessment you can share without the sender, message, or extracted URLs.</p></div>
+        <div className="flex gap-2"><button type="button" onClick={copyBrief} className="rounded-lg bg-indigo-600 px-3 py-2 text-sm font-medium text-white hover:bg-indigo-700">Copy brief</button><button type="button" onClick={downloadBrief} className="rounded-lg border border-stone-300 px-3 py-2 text-sm font-medium hover:bg-white dark:border-stone-600 dark:hover:bg-stone-800">Download brief</button></div>
+      </div>
+      {briefStatus && <p role="status" className="mt-2 text-xs text-stone-600 dark:text-stone-300">{briefStatus}</p>}
+    </div>
     <p className="mt-2 text-xs text-stone-500">{result.notice || "Technical trust signals only. This assessment does not verify mailbox ownership or identify a person."}</p>
   </section>;
 }
